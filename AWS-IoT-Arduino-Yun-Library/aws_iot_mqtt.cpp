@@ -39,8 +39,8 @@ IoT_Error_t aws_iot_mqtt_client::setup(char* client_id, bool clean_session, MQTT
 
 		exec_cmd("cd .\n", false, false); // placeholder: jump over the welcoming prompt for Open WRT
 		exec_cmd("cd /root\n", false, false);
-	    exec_cmd("~\n", true, false); // exit the previous python process
-	    delay(1000); // delay 1000 ms for all related python script to exit
+	    	exec_cmd("~\n", true, false); // exit the previous python process
+	    	delay(1000); // delay 1000 ms for all related python script to exit
 		exec_cmd("python aws_iot_mqtt_client.py\n", false, false);
 
 		// Create obj

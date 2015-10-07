@@ -10,7 +10,7 @@ exp_continue
 }
 -re ".*sword.*" {
 # modify the following to your board password
-exp_send “[your_password]\r”
+exp_send "[your_password]\r"
 }
 }
 expect "*~#" {send "opkg update\r"}

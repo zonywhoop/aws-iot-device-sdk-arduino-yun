@@ -12,7 +12,7 @@ exp_continue
 }
 -re ".*sword.*" {
 # modify the following to your own board password
-exp_send “[your_password]\r”
+exp_send "[your_password]\r"
 }
 }
 interact

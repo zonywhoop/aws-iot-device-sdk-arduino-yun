@@ -430,7 +430,7 @@ NONE\_ERROR if the shadow delta topic is successfully unsubscribed and the callb
 <a name="example"></a>
 ## Example
 ### BasicPubSub
-This example demonstrates a simple MQTT publish/subscribe using AWS IoT from Arduino Yún board. It first subscribes to a topic once and registers a callback to print out new messages to Serial monitor and then publishes to the topic in a loop. Whenever it receives a new message, it will be printed out to Serial monitor indicating the callback function has been called.
+This [example](https://github.com/aws/aws-iot-device-sdk-arduino-yun/tree/master/AWS-IoT-Arduino-Yun-Library/examples/BasicPubSub) demonstrates a simple MQTT publish/subscribe using AWS IoT from Arduino Yún board. It first subscribes to a topic once and registers a callback to print out new messages to Serial monitor and then publishes to the topic in a loop. Whenever it receives a new message, it will be printed out to Serial monitor indicating the callback function has been called.
 
 * **Hardware Required**  
 Arduino Yún  
@@ -489,7 +489,7 @@ None
 	The full sketch can be found in `AWS-IoT-Arduino-Yun-Library/examples/BasicPubSub`.
 
 ### ThingShadowEcho sample app
-This example demonstrates Arduino Yún board as a device communicating with AWS IoT, syncing data into the thing shadow in the cloud and receiving commands from an app. Whenever there is a new command from the app side to change the desired state of the device, the board will receive this request and apply the change by publishing it as the reported state. By registering a delta callback function, users will be able to see this incoming message and notice the syncing of the state.  
+This [example](https://github.com/aws/aws-iot-device-sdk-arduino-yun/tree/master/AWS-IoT-Arduino-Yun-Library/examples/ThingShadowEcho) demonstrates Arduino Yún board as a device communicating with AWS IoT, syncing data into the thing shadow in the cloud and receiving commands from an app. Whenever there is a new command from the app side to change the desired state of the device, the board will receive this request and apply the change by publishing it as the reported state. By registering a delta callback function, users will be able to see this incoming message and notice the syncing of the state.  
 
 * **Hardware Required**  
 Arduino Yún  

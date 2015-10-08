@@ -1,7 +1,7 @@
 aws_iot_mqtt	KEYWORD1
 aws_iot_mqtt_client	KEYWORD1
 aws_iot_version	KEYWORD1
-aws_iot_config_user	KEYWORD1
+aws_iot_config	KEYWORD1
 setup	KEYWORD2
 config	KEYWORD2
 connect	KEYWORD2

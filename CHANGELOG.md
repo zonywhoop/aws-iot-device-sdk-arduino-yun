@@ -1,3 +1,13 @@
+# 1.0.0 (October 8, 2015)
+Features:
+
+* Release to github
+* SDK zip file made available for public download
+
+Bugfixes/Improvements:
+
+* Updated README.md
+
 # 0.2.0 (October 6, 2015)
 Features:
 

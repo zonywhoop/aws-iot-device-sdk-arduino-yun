@@ -17,7 +17,7 @@ The AWS-IoT-Arduino-Yún-SDK allows developers to connect their Arduino Yún com
 <a name="overview"></a>
 ## Overview
 This document provides step by step instructions to install the Arduino Yún SDK and connect your device to the AWS IoT.  
-The AWS-IoT-Arduino-Yún-SDK consists of two parts, which take use of the resources of the two chips on Arduino Yún, one for native Arduino IDE API access and the other for functionality and connections to the AWS IoT built on top of paho-mqtt python package.
+The AWS-IoT-Arduino-Yún-SDK consists of two parts, which take use of the resources of the two chips on Arduino Yún, one for native Arduino IDE API access and the other for functionality and connections to the AWS IoT built on top of the [Eclipse Paho](https://eclipse.org/paho/clients/python/) paho-mqtt python package.
 ### MQTT connection
 The AWS-IoT-Arduino-Yún-SDK provides APIs to let users publish messages to AWS IoT and subscribe to MQTT topics to receive messages transmitted by other devices or coming from the broker. This allows to interact with the standard MQTT PubSub functionality of AWS IoT. For more information on MQTT protocol, please see it [here](http://docs.aws.amazon.com/iot/latest/developerguide/protocols.html).
 ### Thing shadow

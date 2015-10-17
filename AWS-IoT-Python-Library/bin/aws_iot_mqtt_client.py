@@ -236,10 +236,20 @@ def runtime_func(debug, buf_i, buf_o, mock):
                     send_output(debug, buf_o, "X no setup")
 
                 elif(command_type == 'i'):
-                    src_id = "886b943355064ca2849189414129e4c6c7b785ec2dbbc8cd1c568b82d8db18dc"
-                    src_cleansession = True
-                    src_protocol = mqtt.MQTTv311
-                    iot_mqtt_client_obj = awsiot.iot_mqtt_client(src_id, src_cleansession, src_protocol, on_connect, on_disconnect, on_message, ThingShadowTimeOutCheck)
+                    src_id = get_input(debug, buf_i)
+                    #"886b943355064ca2849189414129e4c6c7b785ec2dbbc8cd1c568b82d8db18dc"
+                    try:
+                        src_cleansession = False if(int(get_input(debug, buf_i)) == 0) else True
+                    except ValueError:
+                        src_cleansession = None
+                    try:
+                        src_protocol = if(int(get_input(debug, buf_i)) == 4) else mqtt.MQTTv31
+                    except ValueError:
+                        src_protocol = None
+                    if (not debug):
+                        iot_mqtt_client_obj = awsiot.iot_mqtt_client(src_id, src_cleansession, src_protocol, on_connect, on_disconnect, on_message, ThingShadowTimeOutCheck)
+                    else:
+                         iot_mqtt_client_obj = mock
                 elif(command_type == 'g'):
                     src_serverURL = get_input(debug, buf_i)
                     src_serverPORT = get_input(debug, buf_i)
@@ -367,7 +377,7 @@ def runtime_func(debug, buf_i, buf_o, mock):
     except NameError as e:
         raise e
     except:
-        print "Failed or timeout: ", sys.exc_info()[0]
+        send_output(debug, buf_o, "X cmd timeout")
     pass
 
 # execute

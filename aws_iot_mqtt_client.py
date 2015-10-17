@@ -10,6 +10,7 @@ sys.path.insert(0, '/opt/aws-iot/lib/')
 
 import awsiot
 import paho.mqtt.client as mqtt
+from awsutils import *
 
 # conventions
 ###################################
@@ -111,26 +112,6 @@ def ThingShadowTimeOutCheck(iot_mqtt_client_obj, paho_mqtt_client_obj, stop_sign
         # delay for 500 ms (not accurate)
         time.sleep(0.5)
 
-# tool func
-###################################
-def get_input(debug, buf):
-    if(debug): # read from the given buffer
-        terminator = buf[0].find('\n')
-        if(len(buf[0]) != 0 and terminator != -1):
-            ret = buf[0][0:terminator]
-            buf[0] = buf[0][(terminator+1):]
-            return ret
-        else:  # simulate no-input blocking
-            while 1:
-                pass
-    else:
-        return raw_input() # read from stdin
-
-def send_output(debug, buf, content):
-    if(debug): # write to the given buffer
-        buf[0] = buf[0][:0] + content[0:]
-    else:
-        print(content) # write to stdout
 
 # callbacks
 ###################################
@@ -144,7 +125,7 @@ def on_message(client, userdata, msg):
     userdata.idMap_lock.acquire()
     try:
         for key in userdata.idMap.keys():
-            if(mqtt.topic_matches_sub(key.topic, str(ms/g.topic))): # check for wildcard matching
+            if(mqtt.topic_matches_sub(key.topic, str(msg.topic))): # check for wildcard matching
                 idMap_entry = userdata.idMap[key]
                 if(idMap_entry.get_is_ThingShadow()): # A ThingShadow-related new message
                     # find out the clientToken

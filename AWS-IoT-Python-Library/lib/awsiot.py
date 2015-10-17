@@ -16,6 +16,7 @@
 '''
 
 # Python 2.7.3
+import sys
 import json
 import time
 import ssl
@@ -23,6 +24,14 @@ import thread
 import Queue
 import threading
 import paho.mqtt.client as mqtt
+sys.path.insert(0, '/opt/aws-iot/lib/')
+from awsutils import *
+
+# marco
+###################################
+MAX_CONN_TIME = 10
+CHUNK_SIZE = 50 # 50 bytes as a chunk
+YIELD_METADATA_SIZE = 5 # 'Y ' + ' <more?> ': 2 + 3
 
 
 # myThingName_version

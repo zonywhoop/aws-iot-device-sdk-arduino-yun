@@ -4,7 +4,7 @@ APPPATH=$(dirname $0)
 LIBDIR="AWS-IoT-Python-Library"
 YUNBASE="/opt/aws-iot/"
 
-usage {
+usage() {
   echo "${APP} is used to setup and copy the AWS IoT Python Library to an Arduino Yun"
   echo "${APP} Usage:"
   echo "  ${APP} [-u] 1.1.1.1 YunPassword"
@@ -15,26 +15,26 @@ usage {
 }
 
 # Make an ssh call to the YUN
-yunssh {
+yunssh() {
   ${APPPATH}/utils/yunssh.sh "${YUNIP}" "${YUNPASS}" "${1}"
 }
 # SCP Files over to the yun
-yunscp {
+yunscp() {
   ${APPPATH}/utils/yunscp.sh "${YUNIP}" "${YUNPASS}" "${1}" "${2}"
 }
 # This sub installs the mqtt python lib on the YUN
-install-mqtt {
+install-mqtt() {
   yunssh "opkg update && opkg install distribute python-openssl"
   yunssh "easy_install pip"
   yunssh "pip install paho-mqtt"
 }
 #This sub creates our aws-iot directories on the Yun and copies over the initial certs
-create-directories {
+create-directories() {
   yunssh "mkdir -p ${YUNBASE}/bin ${YUNBASE}/certs ${YUNBASE}/lib "
   yunscp "${LIBPATH}/certs/*" "${YUNBASE}/certs/"
 }
 # This sub copies over the aws-iot lib and bin folders
-copy-files {
+copy-files() {
   yunscp "${LIBPATH}/bin/*" "${YUNBASE}/bin/"
   yunscp "${LIBPATH}/lib/*" "${YUNBASE}/lib/"
 }

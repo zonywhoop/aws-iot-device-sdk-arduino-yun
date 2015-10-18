@@ -10,6 +10,15 @@ APPPATH=$(dirname $0)
 LIBDIR="AWS-IoT-Python-Library"
 YUNBASE="/opt/aws-iot"
 
+for util in yunssh.sh yunscp.sh; do
+  if [ ! -x ${APPPATH}/utils/${util} ]; then
+    chmod +x ${APPPATH}/utils/${util} > /dev/null 2>&1
+    if [ $? -gt 0 ]; then
+      echo "Failed setting ${APPPATH}/utils/${util} as executable.  Aborting."
+      exit 1
+    fi
+  fi
+done
 
 # Our help information
 usage() {
@@ -38,12 +47,13 @@ install-mqtt() {
 #This sub creates our aws-iot directories on the Yun and copies over the initial certs
 create-directories() {
   yunssh "mkdir -p ${YUNBASE}/bin ${YUNBASE}/certs ${YUNBASE}/lib "
-  yunscp "${APPPATH}/${LIBDIR}/certs/*" "${YUNBASE}/certs/"
+  yunscp "${APPPATH}/${LIBDIR}/certs" "${YUNBASE}/"
 }
 # This sub copies over the aws-iot lib and bin folders
 copy-files() {
-  yunscp "${APPPATH}/${LIBDIR}/bin/*" "${YUNBASE}/bin/"
-  yunscp "${APPPATH}/${LIBDIR}/lib/*" "${YUNBASE}/lib/"
+  yunscp "${APPPATH}/${LIBDIR}/bin" "${YUNBASE}/"
+  yunscp "${APPPATH}/${LIBDIR}/lib" "${YUNBASE}/"
+  yunssh "chmod +x ${YUNBASE}/bin/*"
 }
 # Check to make sure we have a valid application and lib directory path available
 if [ ! -d "${APPPATH}/${LIBDIR}" ]; then
@@ -77,6 +87,7 @@ case "$#" in
     esac
     YUNIP=$2
     YUNPASS=$3
+    ;;
   *)
     usage
     ;;

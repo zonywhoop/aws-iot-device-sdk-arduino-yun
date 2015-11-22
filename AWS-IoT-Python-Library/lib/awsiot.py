@@ -147,35 +147,35 @@ class iot_mqtt_client:
     _dynamic_queue_size = 0
 
     # Background Thread
-    stop_sign = False
+    stop_sign = [False]
 
     # robust wrapper
     ###################################
     def config(self, src_serverURL, src_serverPORT, src_cafile, src_key, src_cert):
-        if(len(src_serverURL) != 0):
+        if len(src_serverURL) != 0:
             self._serverURL = src_serverURL
-        if(len(str(src_serverPORT)) != 0):
+        if len(str(src_serverPORT)) != 0:
             self._serverPORT = int(src_serverPORT)
-        if(len(src_cafile) != 0):
+        if len(src_cafile) != 0:
             self._cafile = src_cafile
-        if(len(src_key) != 0):
+        if len(src_key) != 0:
             self._key = src_key
-        if(len(src_cert) != 0):
+        if len(src_cert) != 0:
             self._cert = src_cert
         send_output(self.wrapper_debug, self.wrapper_Tx, "G T")
 
-    def __init__(self, id, clean_session, protocol, on_connect, on_disconnect, on_message, shadow_manager):
+    def __init__(self, srcID, clean_session, protocol, on_connect, on_disconnect, on_message, shadow_manager):
         try:
-            self._iot_mqtt_client_handler = mqtt.Client(id, clean_session, self, protocol)
+            self._iot_mqtt_client_handler = mqtt.Client(srcID, clean_session, self, protocol)
         except BaseException as e:
             send_output(self.wrapper_debug, self.wrapper_Tx, "I F " + e.message)
             return
         self._iot_mqtt_client_handler.on_connect = on_connect
         self._iot_mqtt_client_handler.on_disconnect = on_disconnect
         self._iot_mqtt_client_handler.on_message = on_message
-        print "I T\n"
         # start the background thread to periodically check req_Map
         thread.start_new_thread(shadow_manager, (self, self._iot_mqtt_client_handler, self.stop_sign,))
+        send_output(self.wrapper_debug, self.wrapper_Tx, "I T")
 
     def connect(self, keepalive=60):
         # tls
@@ -197,11 +197,11 @@ class iot_mqtt_client:
             return
 
         cnt_sec = 0
-        while(cnt_sec < MAX_CONN_TIME and self.conn_res == -1): # waiting for connecting to complete (on_connect)
+        while cnt_sec < MAX_CONN_TIME and self.conn_res == -1: # waiting for connecting to complete (on_connect)
             cnt_sec += 1
             time.sleep(1)
 
-        if(self.conn_res != -1):
+        if self.conn_res != -1:
             send_output(self.wrapper_debug, self.wrapper_Tx, "C " + str(self.conn_res) + " " + mqtt.connack_string(self.conn_res)) # 0 for connected
         else:
             send_output(self.wrapper_debug, self.wrapper_Tx, "C F Connection time out")
@@ -225,43 +225,45 @@ class iot_mqtt_client:
             return
 
         cnt_sec = 0
-        while(cnt_sec < MAX_CONN_TIME and self.disconn_res == -1): # waiting for on_disconnect
+        while cnt_sec < MAX_CONN_TIME and self.disconn_res == -1: # waiting for on_disconnect
             cnt_sec += 1
             time.sleep(1)
 
-        if(self.disconn_res != -1):
+        if self.disconn_res != -1:
             send_output(self.wrapper_debug, self.wrapper_Tx, "D " + str(self.disconn_res) + " " + mqtt.error_string(self.disconn_res))
         else:
             send_output(self.wrapper_debug, self.wrapper_Tx, "D F Disconnection time out")
         return self.disconn_res
 
     def subscribe(self, topic, qos, ino_id, is_delta):
+        self.idMap_lock.acquire()
         try:
             (rc, mid) = self._iot_mqtt_client_handler.subscribe(topic, qos)
-            if ino_id == None:
+            if ino_id is None:
                 raise ValueError("None ino_id")
-            self.idMap_lock.acquire()
-            new_key = idMap_key(topic, None) # no clientToken since it is a normal sub
-            new_entry = idMap_info(ino_id, False, is_delta!=0) # This is not a ThingShadow-related topic
+            new_key = idMap_key(topic, None)  # no clientToken since it is a normal sub
+            new_entry = idMap_info(ino_id, False, is_delta != 0)  # This is not a ThingShadow-related topic
             self.idMap[new_key] = new_entry
-            self.idMap_lock.release()
         except BaseException as e:
             send_output(self.wrapper_debug, self.wrapper_Tx, "S F " + e.message)
             return
-        send_output(self.wrapper_debug, self.wrapper_Tx, "S " + str(rc) + " "  + mqtt.error_string(rc))
+        finally:
+            self.idMap_lock.release()
+        send_output(self.wrapper_debug, self.wrapper_Tx, "S " + str(rc) + " " + mqtt.error_string(rc))
         return rc
 
     def unsubscribe(self, topic):
+        self.idMap_lock.acquire()
         try:
             (rc, mid) = self._iot_mqtt_client_handler.unsubscribe(topic)
-            self.idMap_lock.acquire()
             new_key = idMap_key(topic, None)
             ino_id = self.idMap[new_key].get_ino_id()
             del self.idMap[new_key]
-            self.idMap_lock.release()
         except BaseException as e:
             send_output(self.wrapper_debug, self.wrapper_Tx, "U F " + str(e.message))
             return
+        finally:
+            self.idMap_lock.release()
         send_output(self.wrapper_debug, self.wrapper_Tx, "U " + str(rc) + " " + str(ino_id) + " " + mqtt.error_string(rc))
         # send back the return value along with the ino_id for C side reference to free the subgroup slot (important)
         return rc
@@ -278,9 +280,9 @@ class iot_mqtt_client:
 
     def shadowGet(self, ThingName, clientToken, TimeOut, ino_id_accept, ino_id_reject):
         try:
-            if(ino_id_accept == -1 or ino_id_reject == -1):
+            if ino_id_accept == -1 or ino_id_reject == -1:
                 raise Exception("17 shadowGet: Wrong input parameters")
-            if(self.thisThingNameVersionControl.thisThingName == None):
+            if self.thisThingNameVersionControl.thisThingName is None:
                 raise Exception("18 shadowGet: Should init shadow first")
 
             # prep req_Map/ref_cnt_Map_get
@@ -289,11 +291,11 @@ class iot_mqtt_client:
             new_entry = req_Map_info(currTime, TimeOut, "get", ThingName)
             self.req_Map[clientToken] = new_entry
             # refresh get reference count map
-            if(self.ref_cnt_Map_get.has_key(ThingName)):
+            if ThingName in self.ref_cnt_Map_get:
                 cnt = self.ref_cnt_Map_get[ThingName] + 1
                 self.ref_cnt_Map_get[ThingName] = cnt
             else:
-                self.ref_cnt_Map_get[ThingName] =  1
+                self.ref_cnt_Map_get[ThingName] = 1
             self.req_Map_lock.release()
             # Now subscribe and publish, QoS0, retain=False
             # subscribe to shadow get accept
@@ -324,7 +326,7 @@ class iot_mqtt_client:
             # end of JSON payload generation...
             (rc3, mid) = self._iot_mqtt_client_handler.publish(topic_get, payloadJSON, 1, False)
             # feedback
-            if(rc1 + rc2 + rc3 == 0):
+            if rc1 + rc2 + rc3 == 0:
                 send_output(self.wrapper_debug, self.wrapper_Tx, "SG T")
             else:
                 send_output(self.wrapper_debug, self.wrapper_Tx, "SG F " + str(rc1) + " " + str(rc2) + " " + str(rc3))
@@ -333,9 +335,9 @@ class iot_mqtt_client:
 
     def shadowUpdate(self, ThingName, clientToken, TimeOut, payload, ino_id_accept, ino_id_reject, simple_update):
         try:
-            if(ino_id_accept < -1 or ino_id_reject < -1):
+            if ino_id_accept < -1 or ino_id_reject < -1:
                 raise Exception("17 shadowUpdate: Wrong input parameters")
-            if(self.thisThingNameVersionControl.thisThingName == None):
+            if self.thisThingNameVersionControl.thisThingName is None:
                 raise Exception("18 shadowUpdate: Should init shadow first")
             # From here, this thing shadow is init.
             # prep req_Map/ref_cnt_Map_get/version
@@ -344,14 +346,14 @@ class iot_mqtt_client:
             new_entry = req_Map_info(currTime, TimeOut, "update", ThingName)
             self.req_Map[clientToken] = new_entry
             # refresh update reference count map
-            if(self.ref_cnt_Map_update.has_key(ThingName)):
+            if ThingName in self.ref_cnt_Map_update:
                 cnt = self.ref_cnt_Map_update[ThingName] + 1
                 self.ref_cnt_Map_update[ThingName] = cnt
             else:
                 self.ref_cnt_Map_update[ThingName] = 1
             self.req_Map_lock.release()
 
-            if(simple_update == 0): # if the user sets simple_update, does not care about the feedback
+            if simple_update == 0: # if the user sets simple_update, does not care about the feedback
                 # Now subscribe and publish, QoS0, retain=False
                 # subscribe to shadow update accept
                 topic_accept = "$aws/things/" + ThingName + "/shadow/update/accepted"
@@ -385,7 +387,7 @@ class iot_mqtt_client:
             # end of JSON payload generation...
             (rc3, mid) = self._iot_mqtt_client_handler.publish(topic_get, payloadJSON, 1, False)
             # feedback
-            if(rc1 + rc2 + rc3 == 0):
+            if rc1 + rc2 + rc3 == 0:
                 send_output(self.wrapper_debug, self.wrapper_Tx, "SU T")
             else:
                 send_output(self.wrapper_debug, self.wrapper_Tx, "SU F " + str(rc1) + " " + str(rc2) + " " + str(rc3))
@@ -394,9 +396,9 @@ class iot_mqtt_client:
 
     def shadowDeleteState(self, ThingName, clientToken, TimeOut, ino_id_accept, ino_id_reject):
         try:
-            if(ino_id_accept == -1 or ino_id_reject == -1):
+            if ino_id_accept == -1 or ino_id_reject == -1:
                 raise Exception("17 shadowDeleteState: Wrong input parameters")
-            if(self.thisThingNameVersionControl.thisThingName == None):
+            if self.thisThingNameVersionControl.thisThingName is None:
                 raise Exception("18 shadowDeleteState: Should init shadow first")
 
             currTime = time.time()
@@ -405,7 +407,7 @@ class iot_mqtt_client:
             new_entry = req_Map_info(currTime, TimeOut, "delete", ThingName)
             self.req_Map[clientToken] = new_entry
             # refresh delete reference count map
-            if(self.ref_cnt_Map_get.has_key(ThingName)):
+            if ThingName in self.ref_cnt_Map_get:
                 cnt = self.ref_cnt_Map_delete[ThingName] + 1
                 self.ref_cnt_Map_delete[ThingName] = cnt
             else:
@@ -441,7 +443,7 @@ class iot_mqtt_client:
             # end of JSON payload generation...
             (rc3, mid) = self._iot_mqtt_client_handler.publish(topic_get, payloadJSON, 1, False)
             # feedback
-            if(rc1 + rc2 + rc3 == 0):
+            if rc1 + rc2 + rc3 == 0:
                 send_output(self.wrapper_debug, self.wrapper_Tx, "SD T")
             else:
                 send_output(self.wrapper_debug, self.wrapper_Tx, "SD F " + str(rc1) + " " + str(rc2) + " " + str(rc3))
@@ -451,7 +453,7 @@ class iot_mqtt_client:
     def yieldMessage(self):
         try:
             # No more message to echo/Nothing left from the previous message
-            if(self._dynamic_queue_size == 0 and len(self._dynamic_str) == 0):
+            if self._dynamic_queue_size == 0 and len(self._dynamic_str) == 0:
                 # do a clean-up
                 self._dynamic_str = ''
                 self._dynamic_queue_size = 0
@@ -461,7 +463,7 @@ class iot_mqtt_client:
             # We have something to echo. Do it chunk by chunk
             else:
                 # Nothing left from the previous message, start a new one
-                if(len(self._dynamic_str) == 0):
+                if len(self._dynamic_str) == 0:
                     self._dynamic_str = self.msgQ.get()
                     temp_split = self._dynamic_str.split(' ', 1)
                     self._dynamic_ino_id = int(temp_split[0]) # get ino_id
@@ -470,7 +472,7 @@ class iot_mqtt_client:
                 # See if we need to split it
                 string2send = None
                 more = 0
-                if(len(self._dynamic_str) + YIELD_METADATA_SIZE + len(str(self._dynamic_ino_id))> CHUNK_SIZE):
+                if len(self._dynamic_str) + YIELD_METADATA_SIZE + len(str(self._dynamic_ino_id)) > CHUNK_SIZE:
                     more = 1 # there is going to be more chunks coming...
                     stoppoint = CHUNK_SIZE - YIELD_METADATA_SIZE - len(str(self._dynamic_ino_id))
                     string2send = self._dynamic_str[0:stoppoint]

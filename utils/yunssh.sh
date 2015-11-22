@@ -6,7 +6,7 @@ set sshcmd [lindex $argv 2];
 set timeout -1
 # modify the following to your board ip
 
-spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$yunip
+spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -q root@$yunip
 #######################
 expect {
   -re ".*es.*o.*" {

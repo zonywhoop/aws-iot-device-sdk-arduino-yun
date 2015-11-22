@@ -9,7 +9,7 @@ set copydest [lindex $argv 3];
 set timeout -1
 
 # spawn an scp process and copy over our files
-spawn scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r $copysrc root@$yunip:$copydest
+spawn scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -q -r $copysrc root@$yunip:$copydest
 #######################
 expect {
 -re ".*es.*o.*" {
